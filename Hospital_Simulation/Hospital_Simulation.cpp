@@ -129,8 +129,13 @@ void patienceDischarge(Hospital& myHospital)
 	printDashLine();
 	cout << "Waiting Patients: " << endl;
 	myHospital.printWaitingList();
-	printDashLine();
-	printPatience(dischargedPatient);
+
+	while (dischargedPatient != 0)
+	{
+		printDashLine();
+		printPatience(dischargedPatient);
+		dischargedPatient = dischargedPatient->nextPtr;
+	}
 	printAsterikLine();
 	cout << endl;
 }
@@ -149,7 +154,7 @@ bool anotherRound()
 	cout << "-Do you want to make another hospital? (y/n)" << endl;
 	cout << "Enter: ";
 	cin >> yesNo;
-
+					
 	if (yesNo == 'y' || yesNo == 'Y')
 	{
 		cout << endl << endl;

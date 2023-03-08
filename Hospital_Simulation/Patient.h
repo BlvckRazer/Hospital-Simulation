@@ -9,8 +9,9 @@ class Patient
 public:
 	//Constructor for initiation
 	Patient(int = 0, int = 0, int = 0, int = 0);
-	//Constructor for copy
+	//Constructors for copy
 	Patient(Patient*);
+	Patient(Patient&);
 
 	//Necessary functions for getting ans setting parameters
 	void setPaBed(int);
@@ -19,7 +20,8 @@ public:
 	int getPaEntranceTime() const;
 	int getPaHospitalizationTime() const;
 	int getPaDeathTime() const;
-	bool isAlive();
+	bool isAlive() const;
+	Patient* nextPtr;
 
 private:
 	int paID;
@@ -27,8 +29,7 @@ private:
 	int paEntranceTime;
 	int paHospitalizationTime;
 	int paDeathTime;
-	const int entrance, hospitalization, death;
+	int entrance, hospitalization, death;
 	bool alive;
-	Patient* nextPtr;
 };
 

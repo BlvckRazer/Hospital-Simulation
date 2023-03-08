@@ -26,7 +26,7 @@ private:
 	void arrangeSJF(Patient*);
 	void arrangePS(Patient*);
 
-	Patient* dischargeFCFS();
+	Patient* dischargeFCFS()		;
 	Patient* dischargeSJF();
 	Patient* dischargePS();
 
@@ -35,7 +35,7 @@ private:
 	void PS(Patient*, Patient**, Patient**);
 
 	void updateDeadList();
-	void removeFromList(Patient*, Patient**, Patient**);
+	void removeFromList(Patient**, Patient**, Patient**);
 
 private:
 	int time;
