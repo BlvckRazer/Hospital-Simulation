@@ -122,8 +122,10 @@ void patienceReception(Hospital& myHospital, int inputMethod)
 void patienceDischarge(Hospital& myHospital)
 {
 	Patient* dischargedPatient = myHospital.discharge();
+	Patient* deletePaPtr = dischargedPatient;
 	printAsterikLine();
 	cout << "Time: " << myHospital.getTime() << endl;
+	printDashLine();
 	cout << "Hospitalized Patients:" << endl;
 	myHospital.printHospitalizedList();
 	printDashLine();
@@ -136,6 +138,17 @@ void patienceDischarge(Hospital& myHospital)
 		printPatience(dischargedPatient);
 		dischargedPatient = dischargedPatient->nextPtr;
 	}
+
+	while (deletePaPtr != 0)
+	{
+		Patient* del = deletePaPtr;
+		if (deletePaPtr->nextPtr != 0)
+			deletePaPtr = deletePaPtr->nextPtr;
+		else
+			deletePaPtr = 0;
+		delete del;
+	}
+
 	printAsterikLine();
 	cout << endl;
 }
@@ -175,6 +188,7 @@ void printDashLine()
 void printAsterikLine()
 {
 	cout << "********************************"
+		"********************************"
 		"********************************" << endl;
 }
 

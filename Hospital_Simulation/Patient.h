@@ -11,7 +11,6 @@ public:
 	Patient(int = 0, int = 0, int = 0, int = 0);
 	//Constructors for copy
 	Patient(Patient*);
-	Patient(Patient&);
 
 	//Necessary functions for getting ans setting parameters
 	void setPaBed(int);
@@ -24,12 +23,13 @@ public:
 	Patient* nextPtr;
 
 private:
-	int paID;
+	const int entrance, hospitalization, death;
+	const int paID;
+	//These variables would be changed by friend class
 	int paBed;
 	int paEntranceTime;
 	int paHospitalizationTime;
 	int paDeathTime;
-	int entrance, hospitalization, death;
 	bool alive;
 };
 

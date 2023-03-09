@@ -139,7 +139,7 @@ void Hospital::arrangeSJF(Patient* person)
 
 void Hospital::arrangePS(Patient* person)
 {
-	if (addPatient() && person->getPaEntranceTime() == 0)
+	if (person->getPaEntranceTime() == 0 && addPatient())
 	{
 		PS(person, &hospitalizedPtr, &lastHosPtr);
 		assignBed(person);
@@ -150,15 +150,15 @@ void Hospital::arrangePS(Patient* person)
 
 		if (lastHosPtr != person)
 		{
-			assignBed(person);
 			retrieveBed(lastHosPtr);
+			assignBed(person);
 		}
 
 		Patient* temp = hospitalizedPtr;
 		while (temp->nextPtr->nextPtr != 0)
 			temp = temp->nextPtr;
 
-		PS(temp->nextPtr, &waitingPtr,& lastWaiPtr);
+		PS(temp->nextPtr, &waitingPtr, &lastWaiPtr);
 		temp->nextPtr = 0;
 		lastHosPtr = temp;
 	}
@@ -193,7 +193,6 @@ void Hospital::SJF(Patient* person,
 	}
 	else if((*startQueue)->nextPtr == 0)
 	{
-	
 		if ((*startQueue)->getPaEntranceTime() ==
 			person->getPaEntranceTime() &&
 			(*startQueue)->getPaHospitalizationTime() >
@@ -211,30 +210,41 @@ void Hospital::SJF(Patient* person,
 	}
 	else
 	{
-		Patient* temp = *startQueue;
-		while(temp->nextPtr != 0)
+		if ((*startQueue)->getPaEntranceTime() ==
+			person->getPaEntranceTime() &&
+			(*startQueue)->getPaDeathTime() >
+			person->getPaDeathTime())
 		{
-			if (temp->nextPtr->getPaEntranceTime() ==
-				person->getPaEntranceTime())
-			{
-				if(temp->nextPtr->getPaHospitalizationTime() >
-					person->getPaHospitalizationTime())
-					break;
-				else if (temp->nextPtr->nextPtr != 0 &&
-					(temp->nextPtr->nextPtr->getPaEntranceTime() !=
-					person->getPaEntranceTime()))
-				{
-					temp = temp->nextPtr;
-					break;
-				}
-			}	
-			temp = temp->nextPtr;
+			person->nextPtr = *startQueue;
+			(*startQueue) = person;
 		}
-		person->nextPtr = temp->nextPtr;
-		temp->nextPtr = person;
+		else
+		{
+			Patient* temp = *startQueue;
+			while (temp->nextPtr != 0)
+			{
+				if (temp->nextPtr->getPaEntranceTime() ==
+					person->getPaEntranceTime())
+				{
+					if (temp->nextPtr->getPaHospitalizationTime() >
+						person->getPaHospitalizationTime())
+						break;
+					else if (temp->nextPtr->nextPtr != 0 &&
+						(temp->nextPtr->nextPtr->getPaEntranceTime() !=
+							person->getPaEntranceTime()))
+					{
+						temp = temp->nextPtr;
+						break;
+					}
+				}
+				temp = temp->nextPtr;
+			}
+			person->nextPtr = temp->nextPtr;
+			temp->nextPtr = person;
 
-		if (person->nextPtr == 0)
-			*endQueue = person;
+			if (person->nextPtr == 0)
+				*endQueue = person;
+		}
 	}
 }
 
@@ -254,8 +264,8 @@ void Hospital::PS(Patient* person, Patient** startQueue,
 			person->getPaDeathTime())
 		{
 			person->nextPtr = *startQueue;
-			*endQueue = *startQueue;
 			*startQueue = person;
+			*endQueue = (*startQueue)->nextPtr;
 		}
 		else
 		{
@@ -265,29 +275,42 @@ void Hospital::PS(Patient* person, Patient** startQueue,
 	}
 	else
 	{
-		Patient* temp = *startQueue;
-		while (temp->nextPtr != 0)
+		if ((*startQueue)->getPaEntranceTime() ==
+			person->getPaEntranceTime() &&
+			(*startQueue)->getPaDeathTime() >
+			person->getPaDeathTime())
 		{
-			if (temp->nextPtr->getPaEntranceTime() ==
-				person->getPaEntranceTime())
-			{
-				if(temp->nextPtr->getPaDeathTime() >
-					person->getPaDeathTime())
-					break;
-				else if (temp->nextPtr->nextPtr->getPaDeathTime() !=
-					person->getPaDeathTime())
-				{
-					temp = temp->nextPtr;
-					break;
-				}
-			}
-			temp = temp->nextPtr;
+			person->nextPtr = *startQueue;
+			(*startQueue) = person;
 		}
-		person->nextPtr = temp->nextPtr;
-		temp->nextPtr = person;
+		else
+		{
+			Patient* temp = *startQueue;
+			while (temp->nextPtr != 0)
+			{
+				if (temp->nextPtr->getPaEntranceTime() ==
+					person->getPaEntranceTime())
+				{
+					if (temp->nextPtr->getPaDeathTime() >
+						person->getPaDeathTime())
+						break;
+					else if (temp->nextPtr->nextPtr != 0 &&
+						(temp->nextPtr->nextPtr->getPaDeathTime() !=
+							person->getPaDeathTime()))
+					{
+						temp = temp->nextPtr;
+						break;
+					}
+				}
+				temp = temp->nextPtr;
+			}
 
-		if (person->nextPtr == 0)
-			*endQueue = person;
+			person->nextPtr = temp->nextPtr;
+			temp->nextPtr = person;
+
+			if (person->nextPtr == 0)
+				*endQueue = person;
+		}
 	}
 }
 
@@ -443,62 +466,87 @@ Patient* Hospital::dischargeSJF()
 
 Patient* Hospital::dischargePS()
 {
-	while (hospitalizedPtr != 0 ||
+	Patient* nextPatient = 0;
+	Patient* person = 0;
+
+	if (hospitalizedPtr != 0 ||
 		waitingPtr != 0)
 	{
 		++time;
 		Patient* temp1 = waitingPtr;
 		while (temp1 != 0)
 		{
-			if (waitingPtr->paEntranceTime != 0)
+			if (temp1->paEntranceTime != 0)
 				--temp1->paEntranceTime;
+
+			--temp1->paDeathTime;
+			if (temp1->getPaDeathTime() == 0)
+			{
+				temp1->alive = false;
+				updateDeadList();
+			}
 			temp1 = temp1->nextPtr;
 		}
-	}
 
-	Patient* temp2 = hospitalizedPtr;
-	while (temp2 != 0)
-	{
-		--temp2->paHospitalizationTime;
-		if (temp2->getPaHospitalizationTime() == 0)
+		Patient* temp2 = hospitalizedPtr;
+		while (temp2 != 0)
 		{
-			retrieveBed(temp2);
-			if (waitingPtr->getPaEntranceTime() == 0)
+			--temp2->paHospitalizationTime;
+			if (temp2->getPaHospitalizationTime() == 0)
 			{
-				assignBed(waitingPtr);
-				Patient* newPa = waitingPtr;
-				waitingPtr = waitingPtr->nextPtr;
-				newPa->nextPtr = 0;
-				PS(waitingPtr, &hospitalizedPtr,
-					&lastHosPtr);
+				retrieveBed(temp2);
+				removePatient();
+				Patient* dischargePa = temp2;
+				temp2 = temp2->nextPtr;
+				removeFromList(&dischargePa, &hospitalizedPtr, &lastHosPtr);
+				if (person == 0)
+				{
+					person = dischargePa;
+					nextPatient = person;
+				}
+				else
+				{
+					nextPatient->nextPtr = dischargePa;
+					nextPatient = nextPatient->nextPtr;
+				}
 			}
+			else
+				temp2 = temp2->nextPtr;
 		}
-		temp2 = temp2->nextPtr;
-	}
 
-	Patient* temp3 = waitingPtr;
-	while (temp3->getPaEntranceTime() == 0)
-	{
-		if (lastHosPtr->getPaDeathTime() >
-			temp3->getPaDeathTime())
+		while (waitingPtr != 0 && isFreeBed() &&
+			waitingPtr->getPaEntranceTime() == 0)
 		{
-			PS(temp3, &hospitalizedPtr, &lastHosPtr);
-			PS(temp3, &hospitalizedPtr, &lastHosPtr);
-			retrieveBed(lastHosPtr);
-			assignBed(temp3);
-
-			Patient* stoppedParent = hospitalizedPtr;
-			while (stoppedParent->nextPtr->nextPtr != 0)
-				stoppedParent = stoppedParent->nextPtr;
-
-			PS(stoppedParent->nextPtr, &waitingPtr, 0);
-			stoppedParent->nextPtr = 0;
-			lastHosPtr = stoppedParent;
-
+			addPatient();
+			assignBed(waitingPtr);
+			Patient* newPa = waitingPtr;
+			waitingPtr = waitingPtr->nextPtr;
+			newPa->nextPtr = 0;
+			PS(newPa, &hospitalizedPtr,
+				&lastHosPtr);
 		}
-		temp3 = temp3->nextPtr;
+
+		Patient* temp3 = waitingPtr;
+		while (temp3 != 0 && temp3->getPaEntranceTime() == 0)
+		{
+			if (lastHosPtr->getPaDeathTime() >
+				temp3->getPaDeathTime())
+			{
+				Patient* newPa = temp3;
+				temp3 = temp3->nextPtr;
+				removeFromList(&newPa, &waitingPtr, &lastWaiPtr);
+				PS(newPa, &hospitalizedPtr, &lastHosPtr);
+				Patient* removedPa = lastHosPtr;
+				retrieveBed(removedPa);
+				assignBed(newPa);
+				removeFromList(&removedPa, &hospitalizedPtr, &lastHosPtr);
+				PS(removedPa, &waitingPtr, &lastWaiPtr);
+			}
+			else
+				temp3 = temp3->nextPtr;
+		}
 	}
-	return 0;
+	return person;
 }
 
 void Hospital::updateDeadList()
@@ -556,7 +604,7 @@ void Hospital::removeFromList(Patient** person, Patient** head, Patient** tail)
 		else
 		{
 			Patient* temp = *head;
-			while (temp->nextPtr != 0)
+			while (temp->nextPtr->nextPtr != 0)
 			{
 				if (temp->nextPtr->getPaID() == (*person)->getPaID())
 					break;
@@ -575,8 +623,8 @@ void Hospital::printWaitingList() const
 	cout << "ID" << '\t'
 		<< "Status" << '\t'
 		<< "Entrance Time" << "\t"
-		<< "Hospitalization Time" << '\t' 
-		<< "Time to Death"<< endl;
+		<< "Hospitalization Time (Remaining)" << '\t'
+		<< "Time to Death (Remaining)" << endl;
 
 	Patient* temp = waitingPtr;
 
@@ -586,9 +634,12 @@ void Hospital::printWaitingList() const
 			<< "\t"
 			<< (temp->isAlive() ? "Alive \t" : "Dead  \t")
 			<< setw(2) << setfill('0') << temp->entrance << "           \t"
-			<< setw(2) << setfill('0') << temp->getPaHospitalizationTime()
-			<< "                  \t" << setw(2) << setfill('0')
-			<< temp->getPaDeathTime() << endl;
+			<<  setw(2) << setfill('0')
+			<< temp->hospitalization << '(' << setw(2) << setfill('0')
+			<< temp->getPaHospitalizationTime() << ')'
+			<< "                          \t" << setw(2) << setfill('0')
+			<< temp->death << '(' << setw(2) << setfill('0')
+			<< temp->getPaDeathTime() << ')' << endl;
 
 		temp = temp->nextPtr;
 	}
@@ -600,9 +651,12 @@ void Hospital::printWaitingList() const
 		cout << setw(2) << setfill('0') << temp->getPaID()
 			<< "\t" << (temp->isAlive() ? "Alive \t" : "Dead  \t")
 			<< setw(2) << setfill('0') << temp->entrance << "           \t"
-			<< setw(2) << setfill('0') << temp->getPaHospitalizationTime()
-			<< "                  \t" << setw(2) << setfill('0')
-			<< temp->getPaDeathTime() << endl;
+			<< setw(2) << setfill('0')
+			<< temp->hospitalization << '(' << setw(2) << setfill('0')
+			<< temp->getPaHospitalizationTime() << ')'
+			<< "                          \t" << setw(2) << setfill('0')
+			<< temp->death << '(' << setw(2) << setfill('0')
+			<< temp->getPaDeathTime() << ')' << endl;
 
 		temp = temp->nextPtr;
 	}

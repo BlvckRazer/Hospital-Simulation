@@ -2,11 +2,10 @@
 
 Patient::Patient(int id, int entranceTime,
 	int hospitalizationTime, int deathTime)
-	:nextPtr(0), entrance(entranceTime),
+	:nextPtr(0), entrance(entranceTime), paID(id),
 	hospitalization(hospitalizationTime),
 	death(deathTime)
 {
-	paID = id;
 	paEntranceTime = entranceTime;
 	paHospitalizationTime = hospitalizationTime;
 	paDeathTime = deathTime;
@@ -15,31 +14,16 @@ Patient::Patient(int id, int entranceTime,
 }
 
 Patient::Patient(Patient* copy)
-	:entrance(copy->entrance),
+	:entrance(copy->entrance), paID(copy->paID),
 	hospitalization(copy->hospitalization),
 	death(copy->death)
 {
-	this->paID = copy->getPaID();
 	this->paEntranceTime =
 		copy->getPaEntranceTime();
 	this->paHospitalizationTime =
 		copy->getPaHospitalizationTime();
 	this->paDeathTime = copy->getPaDeathTime();
 	this->paBed = copy->getPaBed();
-}
-
-Patient::Patient(Patient& copy)
-	:entrance(copy.entrance),
-	hospitalization(copy.hospitalization),
-	death(copy.death)
-{
-	this->paID = copy.getPaID();
-	this->paEntranceTime =
-		copy.getPaEntranceTime();
-	this->paHospitalizationTime =
-		copy.getPaHospitalizationTime();
-	this->paDeathTime = copy.getPaDeathTime();
-	this->paBed = copy.getPaBed();
 }
 		
 void Patient::setPaBed(int num)
